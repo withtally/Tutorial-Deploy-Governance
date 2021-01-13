@@ -1,10 +1,90 @@
-# Tutorial: Deploy Governance
+In this tutorial we show you how to deploy a Compound-style governance system that is secure and ready to be used in your DeFi project or protocol using HardHat.
 
-You could use a read made tool, but lets do it so we understand whats happening under the hood. 
+If you would like to have your Compound-Style governance indexed by [Tally](http://www.withTally.com) indexers and added to the website, please [contact us](//dennison@withTally.com).
 
-Follow this to get started with HardHat: 
+**What we will accomplish:** 
 
-[https://hardhat.org/getting-started/](https://hardhat.org/getting-started/)
+1. Review components of Compounds Governance system
+2. Write a script that deploys Compounds Governance contracts to a network of your choice
+3. Create a CLI task in HardHat that allows you to deploy secure governance's from the command line
+
+**Resources:** 
+
+[Complete source code](https://github.com/withtally/Tutorial-Deploy-Governance) for this tutorial
+
+Check out recent votes and proposals on Compound with [Tally](http://www.withTally.com)
+
+[Tally Discord](https://discord.gg/Shx5Yjzqwm)
+
+[Compounds Documentation](https://compound.finance/docs)
+
+[HardHat](https://hardhat.org/getting-started/)
+
+**Why Compound?** 
+
+Compound COMP governance system is one of the best in DeFi. It backs billions of dollars and its community regularly [proposes and votes](https://www.withtally.com/governance/compound) on changes via its governance. It is also the same governance tool used by [Uniswap](https://www.withtally.com/governance/uniswap) for governance and also backs billions of dollars. The system is comprised of three basic contracts, is easy to reason about, and has been very closely audited.
+
+## Background
+
+### The Compound Github
+
+All of the code required to launch your own governance can be found on the Compound Github.
+
+[https://github.com/compound-finance/compound-protocol/tree/master/contracts](https://github.com/compound-finance/compound-protocol/tree/master/contracts)
+
+The three contract we are interested in are: 
+
+**[Comp](https://github.com/compound-finance/compound-protocol/blob/master/contracts/Governance/Comp.sol)**
+
+**[GovernorAlpha](https://github.com/compound-finance/compound-protocol/blob/master/contracts/Governance/GovernorAlpha.sol)**
+
+**[Timelock](https://github.com/compound-finance/compound-protocol/blob/master/contracts/Timelock.sol)**
+
+### **COMP**
+
+[https://github.com/compound-finance/compound-protocol/blob/master/contracts/Governance/Comp.sol](https://github.com/compound-finance/compound-protocol/blob/master/contracts/Governance/Comp.sol)
+
+The COMP contract is what creates the COMP token. It is an ERC20 compatible token with support for checkpoints. Checkpointing is a system by which you can check the token balance of any user at any particular point in history. This is important because when a vote comes up that users need to vote on, you don't want individuals buying or selling tokens specifically to change the outcome of the vote and then dumping straight after a vote closes. To avoid this, checkpoints are used. By the time someone creates a proposal and puts it up for a vote in the Compound ecosystem, the voting power of all token holders is already known, and fixed, at a point in the past. This way users can still buy or sell tokens, but their balances won't affect their voting power. 
+
+### **GovernorAlpha**
+
+[https://github.com/compound-finance/compound-protocol/blob/master/contracts/Governance/GovernorAlpha.sol](https://github.com/compound-finance/compound-protocol/blob/master/contracts/Governance/GovernorAlpha.sol)
+
+The GovernorAlpha contract is the contract that does the actual "governance" part of the ecosystem. There are a number of hard-coded parameters that decide the functionality of governance, and the contract itself is the tool by which proposals are proposed, voted upon, and transferred to a timelock to be executed. The logic for secure voting is handled here. 
+
+### **Timelock**
+
+[https://github.com/compound-finance/compound-protocol/blob/master/contracts/Timelock.sol](https://github.com/compound-finance/compound-protocol/blob/master/contracts/Timelock.sol)
+
+The final component of the system is a Timelock. Timelock contracts essentially "delay" the execution of transactions to give the community a chance for a "sanity check" to be  run over the outcome of a vote. It's important if a last minute bug is found in the system and it needs to be caught before a transaction is implemented.
+
+All three of these components work together with their own sphere of influence. The COMP token essentially functions as a voter registration tool (and as a tradable ERC20 token), the GovernorAlpha acts as a polling location- the place where voting happens, and the Timelock acts as a loading bay that holds decision for a set amount of time before executing them on the network. 
+
+### Get the Source Code
+
+First we need to get the COMP source code. There are two options for this to be sure you're getting the audited and deployed Code: The [Compound Github](https://github.com/compound-finance), or Etherscan via the [Compound Finance Doc's](https://compound.finance/docs). 
+
+**Etherscan:** 
+
+If you go the etherscan route, to get the addresses of the deployed Compound contracts visit [https://compound.finance/docs](https://compound.finance/docs).
+
+Since all Compound Finance code has been verified on Etherscan (don't use any code that isn't verified for a real project!) we can flip over to the contract information to see the source code and copy it. 
+
+**For reference:** 
+
+COMP: [https://etherscan.io/address/0xc00e94cb662c3520282e6f5717214004a7f26888](https://etherscan.io/address/0xc00e94cb662c3520282e6f5717214004a7f26888)
+
+Governance: [https://etherscan.io/address/0xc0da01a04c3f3e0be433606045bb7017a7323e38](https://etherscan.io/address/0xc0da01a04c3f3e0be433606045bb7017a7323e38)
+
+Timelock: [https://etherscan.io/address/0x6d903f6003cca6255d85cca4d3b5e5146dc33925](https://etherscan.io/address/0x6d903f6003cca6255d85cca4d3b5e5146dc33925)
+
+## Create your project
+
+**Requirements:** 
+
+You will need to have `node` installed on your machine. We will be using [HardHat](https://hardhat.org/getting-started/) for our scripting and deployment needs. 
+
+**Get Started:**
 
 First we are going to create a directory for our project: 
 
@@ -31,47 +111,17 @@ This will setup our initial HardHat Project with some defaults.
 - Accept creating a .gitignore
 - Accept installing the sample project dependencies
 
-![Tutorial%20Deploy%20Governance%203c38c6870ab44acbb4d055a75f7a6b93/Screen_Shot_2020-12-30_at_10.18.33_AM.png](Tutorial%20Deploy%20Governance%203c38c6870ab44acbb4d055a75f7a6b93/Screen_Shot_2020-12-30_at_10.18.33_AM.png)
-
 At this point you might want to spend a couple minutes inspecting the HardHat setup if this is your first time working with it. 
 
 Check out this guide for more info: [https://hardhat.org/getting-started/](https://hardhat.org/getting-started/)
 
-Now that we're here we want to start building our Compound-style governance. To do this, we need to understand the Compound-Style system. Compound has some excellent documentation available, so feel free to deep-dive: [https://compound.finance/docs/governance](https://compound.finance/docs/governance) .
+### Create the files
 
-In a nutshell, to deploy your governance and get it ready for use in your ecosystem, we need three contracts: 
+We will be creating three files in our `/contracts` folder: `COMP.sol` `Timelock.sol` `GovernorAlpha.sol`. You can take these files directly from the Compound Github or copy from the verified code in Etherescan. 
 
-COMP 
+There will be a leftover file from the HardHat install called `Greeter.sol` in the contracts directory. You can delete this. 
 
-GovernorAlpha
-
-Timelock
-
-**COMP**
-
-The COMP contract is what creates the COMP token. It is an ERC20 compatible token with support for checkpoints. Checkpointing is a system by which you can check the token balance of any user at any particular point in history. This is important because when a vote comes up that users need to vote on, you don't want individuals buying or selling tokens specifically to change the outcome of the vote and then dumping straight after a vote closes. To avoid this, checkpoints are used. By the time someone creates a proposal and puts it up for a vote in the Compound ecosystem, the voting power of all token holders is already known, and fixed, at a point in the past. This way users can still buy or sell tokens, but their balances won't affect their voting power. 
-
-**GovernorAlpha**
-
-The GovernorAlpha contract is the contract that does the actual "governance" part of the ecosystem. There are a number of hard-coded parameters that decide the functionality of governance, and the contract itself is the tool by which proposals are proposed, voted upon, and transferred to a timelock to be executed. The logic for secure voting is handled here. 
-
-**Timelock**
-
-The final component of the system is a TimeLock. Timelocks essentially "delay" the execution of transactions to give the community a chance for a "sanity check" to be  run over the outcome of a vote. It's important if a last minute bug is found in the system and it needs to be caught before a transaction is implemented.
-
-All three of these components work together with their own sphere of influence. The COMP token essentially functions as a voter registration tool (and as a tradable ERC20 token), the GovernorAlpha acts as a polling location- the place where voting happens, and the Timelock acts as a loading bay that holds decision for a set amount of time before executing them on the network. 
-
-Deploy **COMP**
-
-First we need to get the COMP source code. There are two options for this to be sure you're getting the Audited and deployed Code: The [Compound Github](https://github.com/compound-finance), or Etherscan. To get the code from Etherscan, lets visit [https://compound.finance/docs](https://compound.finance/docs), there if you scroll down you will see a list of all the deployed contracts with their addresses. In this case the COMP contract is deployed at: 0xc00e94cb662c3520282e6f5717214004a7f26888 and can be found on Etherscan [here](https://etherscan.io/address/0xc00e94cb662c3520282e6f5717214004a7f26888).
-
-Since all Compound Finance code has been verified on Etherscan (don't use any code that isn't verified for a real project!) we can flip over to the contract information to see the source code and copy it. 
-
-<<Image here of Etherscan>>
-
-Create a new file called `COMP.sol` in your `/contracts` folder and paste the source code in. There should already be a contract there called `Greeter.sol` leftover from the HardHat install. Feel free to delete it.  
-
-Lets also get the `Timelock` and `GovernorAlpha` source code while we are at it. Return to [https://compound.finance/docs](https://compound.finance/docs) and repeat the same steps for Timelock and GovernorAlpha as we did for COMP.  When you are finished your `/contracts` folder should have three contracts in it. 
+When you are finished your `/contracts` folder should have three contracts in it. 
 
 ```markdown
 /Contracts
@@ -82,9 +132,9 @@ Lets also get the `Timelock` and `GovernorAlpha` source code while we are at it.
 
 **CUSTOMIZE and COMPILE** 
 
-The next step is to compile our contracts, but before we do that we need to configure our Solidity Compiler version. Compounds contracts were compiled with Solidity version: 0.5.16, which is significantly older than the default 0.7.3 which is found in the default HardHat configuration. 
+The next step is to compile our contracts, but before we do that we need to configure our Solidity Compiler version. Compounds contracts were compiled with Solidity version: 0.5.16, which is significantly older than the default 0.7.3 which is found in the default HardHat configuration. You can update the Compound files be compatible with the latest compiler, but you will lose the implied security guarantees of the existing audited code if you do that. 
 
-At the top of your project find the file:
+At the top level of your project find the file:
 
 `hardhat.config.js`
 
@@ -130,9 +180,9 @@ Easy!
 
 **Customizing Parameters**
 
-A number of parameters in the Compound system are hardcoded to safe on gas execution costs. These parameters you will most likely want to customize for your instalation: 
+A number of parameters in the Compound system are hard coded, these parameters you will most likely want to customize for your installation: 
 
-**COMP**
+### **COMP**
 
 ```jsx
 contract Comp {
@@ -163,7 +213,7 @@ These are standard ERC20 properties, the Name, and Symbol (for exchanges that li
 
 Feel free to change `name`, `symbol` and `totalSupply` to whatever you like and run `npx hardhat compile` once again. 
 
-**GovernorAlpha**
+### **GovernorAlpha.sol**
 
 The next step is to customize `GovernorAlpha` contract. At the top of the source code file: `/contracts/GovernorAlpha.sol` that you created earlier with the copy-paste code from etherscan you should see the following: 
 
@@ -204,17 +254,27 @@ Here the items that interest us for customization are:
 
 **Name**: This self explanatory, change it to whatever you would like. 
 
-**QuorumVotes (`quorumVotes()`)** The quorum is the number of **YES** votes required to ensure that a vote is valid. The idea behind this is that some minimum number of votes need to be cast in order for the vote to be seen as legitimate: it wouldn't make sense if in an ecosystem of 10 million possible votes a proposal passed 2 yes votes to 1 no vote. In the Compound ecosystem at least 400,000 COMP are required to vote yes for a proposal to pass. In todays money ($155 per comp) thats over $60 Million dollars worth of votes needed to get something to pass. Needless to say, if you customize this, you will want to pick a number you feel is reasonable for your system. 
+**QuorumVotes (`quorumVotes()`)** 
 
-**ProposalThreshold (`proposalThreshold()`)** To prevent a system where countless spam proposals are created, a proposal threshold requires an address has a certain number of votes before they can make a proposal. In the case of COMP, it's 100,000. Pick a number that works for you. 
+The quorum is the number of **YES** votes required to ensure that a vote is valid. The idea behind this is that some minimum number of votes need to be cast in order for the vote to be seen as legitimate: it wouldn't make sense if in an ecosystem of 10 million possible votes a proposal passed 2 yes votes to 1 no vote. In the Compound ecosystem at least 400,000 COMP are required to vote yes for a proposal to pass. In todays money ($155 per comp) thats over $60 Million dollars worth of votes needed to get something to pass. Needless to say, if you customize this, you will want to pick a number you feel is reasonable for your system. 
 
-**ProposalMaxOperations ( `proposalMaxOperations()`)** This is the maximum number of operations that can be executed in a single proposal. Unless you have a good reason, I would probably leave this alone. 
+**ProposalThreshold (`proposalThreshold()`)** 
 
-**VotingDelay (`votingDelay()`)** This is the length of time between which a proposal can be created and it is available to be voted upon. By requiring at least one block to pass, the governance is protected from Flash Loan attacks that might borrow a large number of tokens, propose a vote, and vote on it all in one block. Unless you have a good reason, I would leave this alone. 
+To prevent a system where countless spam proposals are created, a proposal threshold requires an address has a certain number of votes before they can make a proposal. In the case of COMP, it's 100,000. Pick a number that works for you. 
 
-**VotingPeriod ( `votingPeriod()`)** The length of time for which proposals are available to be voted upon, with time in Ethereum Blocks. Pick what you feel is reasonable for use case. 
+**ProposalMaxOperations ( `proposalMaxOperations()`)** 
 
-**TimeLock**
+This is the maximum number of operations that can be executed in a single proposal. Unless you have a good reason, I would probably leave this alone. 
+
+**VotingDelay (`votingDelay()`)**
+
+ ********This is the length of time between which a proposal can be created and it is available to be voted upon. By requiring at least one block to pass, the governance is protected from Flash Loan attacks that might borrow a large number of tokens, propose a vote, and vote on it all in one block. Unless you have a good reason, I would leave this alone. 
+
+**VotingPeriod ( `votingPeriod()`)** 
+
+The length of time for which proposals are available to be voted upon, with time in Ethereum Blocks. Pick what you feel is reasonable for use case. 
+
+### **TimeLock.sol**
 
 Looking at your `Timelock.sol` source code you will see there is first a `SafeMath` library contract at the top of your file. The `Timelock` contract starts at line 171. There you will see the following: 
 
@@ -243,7 +303,7 @@ The constants available to modify are:
 
 In general, I would recommend leaving these set as they are, but again- if you need something different feel free to customize them. Once you're set, run `npx hardhat compile` again. 
 
-**Deployment**: 
+## **Deployment**:
 
 To deploy a contract using HardHat, we need to first write a script. When we first created our project HardHat created a sample script for us, but we're going to start from scratch. To deploy a COMP governance system we need to deploy our contracts in a specific order as some contracts need the address of the others in their constructor functions: 
 
@@ -313,6 +373,7 @@ to get another signer
 
 ```jsx
 const [tokenRecipient, timelockAdmin] = await ethers.getSigners();
+
 ```
 
 Now that we have a signer to be our `Timelock` admin, we can choose a delay between our `MINIMUM_DELAY` and `MAXIMUM_DELAY` constants, and pass that in. 
@@ -442,38 +503,6 @@ Now to deploy to your network you type:
 npx hardhat run scripts/Deploy.js --network rinkeby
 ```
 
-**Private keys**
-
-Getting private keys for development is always a pain as most key management software deliberately makes it difficult to pull private keys out. User also frequently work with mnemonics, which in turn need to be converted to private keys- also a pain. Even more painful is the process of using both your private keys in your deployment scrips AND have them easy to interact in the browser. Lets not even talk about trying to keep them secure and not committing them to github....
-
-The process I use is this: 
-
-1. Create a new metamask account. When you are shown your secret mnemonic, copy it. 
-2. Run `npx ganache-cli --mnemonic <<your twelve word mnemonic here>>`
-
-`ganache-cli` will output a list of accounts derived from your mnemonic, including their private keys: 
-
-```markdown
-Ganache CLI v6.11.0 (ganache-core: 2.12.1)
-
-Available Accounts
-==================
-(0) 0xD461f577156b62d32ca900e1F3Be045670137B03 (100 ETH)
-(1) 0xcf97eFB38ee6F43025e6c5a3bc51947A45E4f2F7 (100 ETH)
-........
-
-Private Keys
-==================
-(0) 0xcbe6f6bb39442b4aea783b324cFAKE368b39b2161a72cdecbc7b07256eFAKE
-(1) 0x4099ee114e3c57519f2f19ebea783b38be9fFAKEFAKEbd49d92bd6844cFAKE
-........
-
-```
-
-Copy and paste the first three private keys in a comma-separated array with each private key in quotes.
-
-Because this is a recipe for mistakes, if you're going to deploy to mainnet, be PARANOID on how you do this. One mistaken commit + push to GitHub and your entire system is exposed. 
-
 ## **Create a Task**
 
 Finally, we're using HardHat because it helps automate deployments. Let's create a task so we can deploy our governance directly from the command line. 
@@ -582,5 +611,6 @@ To deploy:
 
 `npx hardhat Deploy --token 0xAddressToReceivetokens --timelock 0xAddressTimeLockAdmin --guardian 0xAddressGovernorAlphaAdmin --network rinkeby`
 
-You can see the final code here:
-https://github.com/withtally/Tutorial-Deploy-Governance
+You can see the final code here: 
+
+[https://github.com/withtally/Tutorial-Deploy-Governance](https://github.com/withtally/Tutorial-Deploy-Governance)
