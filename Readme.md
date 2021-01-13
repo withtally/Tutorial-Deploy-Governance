@@ -1,4 +1,16 @@
+TL:DR
+
+Want governance now? Clone the [github](https://github.com/withtally/Tutorial-Deploy-Governance) project, install the dependencies, add your Infura API and private key to the config and type `npx hardhat deploy`
+
+**Tally Governance Tutorial:** 
+
 In this tutorial we show you how to deploy a Compound-style governance system that is secure and ready to be used in your DeFi project or protocol using HardHat.
+
+## About [Tally](https://withtally.com/):
+
+[https://withtally.com/](https://withtally.com/)
+
+Tally is the premier place to interact with Governance on the Ethereum blockchain. We make tools to make governance easier, bring greater community involvement and enhanced transparency for decentralized protocols.
 
 If you would like to have your Compound-Style governance indexed by [Tally](http://www.withTally.com) indexers and added to the website, please [contact us](//dennison@withTally.com).
 
