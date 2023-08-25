@@ -1,3 +1,10 @@
+## DEPRECATED
+
+Governor Alpha + Bravo is no longer recommended for new DAO deployments. Please use OpenZeppelin Governor for all new deployments. 
+See: [OpenZeppelin's Contract Wizard](https://docs.openzeppelin.com/contracts/4.x/wizard)
+
+## DEPRECATED
+
 TL:DR
 
 Want governance now? Clone the [github](https://github.com/withtally/Tutorial-Deploy-Governance) project, install the dependencies, add your Infura API and private key to the config and type `npx hardhat deploy`
